@@ -505,7 +505,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
         Route::post('/refresh-orders-list', [Restaurant\KitchenController::class, 'refreshOrdersList']);
         Route::post('/refresh-line-orders-list', [Restaurant\KitchenController::class, 'refreshLineOrdersList']);
 
-        Route::get(uri: '/orders', [Restaurant\OrderController::class, 'index']);
+        Route::get('/orders', [Restaurant\OrderController::class, 'index']);
         Route::get('/orders/mark-as-served/{id}', [Restaurant\OrderController::class, 'markAsServed']);
         Route::get('/data/get-pos-details', [Restaurant\DataController::class, 'getPosDetails']);
         Route::get('/data/check-staff-pin', [Restaurant\DataController::class, 'checkStaffPin']);
