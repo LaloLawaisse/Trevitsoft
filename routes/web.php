@@ -521,11 +521,11 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::put('sells/update-shipping/{id}', [SellController::class, 'updateShipping']);
     Route::get('shipments', [SellController::class, 'shipments']);
 
-    //Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);
-    //Route::delete('manage-modules/destroy/{module_name}', [Install\ModulesController::class, 'destroy']);
-    //Route::resource('manage-modules', Install\ModulesController::class)
-    //    ->only(['index', 'update']);
-    //Route::get('regenerate', [Install\ModulesController::class, 'regenerate']);
+    Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);
+    Route::delete('manage-modules/destroy/{module_name}', [Install\ModulesController::class, 'destroy']);
+    Route::resource('manage-modules', Install\ModulesController::class)
+        ->only(['index', 'update']);
+    Route::get('regenerate', [Install\ModulesController::class, 'regenerate']);
 
     Route::resource('warranties', WarrantyController::class);
 
