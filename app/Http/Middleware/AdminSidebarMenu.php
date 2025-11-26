@@ -406,7 +406,7 @@ class AdminSidebarMenu
                         }
                         
                         $sub->url(
-                            'https://app.trevitsoft.com/stock-adjustments/create',
+                            'https://gestionenorden.com/stock-adjustments/create',
                             'Integraciones',
                             ['icon' => '', 'active' => request()->segment(1) == 'import-sales']
                         );

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use DateTime;
 
 //require 'vendor/autoload.php';  // Asegúrate de que autoload.php esté en la ubicación correcta
-require_once '/www/wwwroot/app.trevitsoft.com/vendor/afipsdk/afip.php/src/Afip.php';  // Usar require_once para cargar la clase Afip
+require_once '/www/wwwroot/gestionenorden.com/vendor/afipsdk/afip.php/src/Afip.php';  // Usar require_once para cargar la clase Afip
 
 use Afip;
 use TCPDF;
@@ -1885,7 +1885,7 @@ ktXM8qGO0BygJmp3clHKCJCIHU4wLq2qo7/8Y9JTMD5AKA7+ymT5
         }
     
         // Remover la parte absoluta de la ruta del servidor
-        $facturaPath = str_replace('/www/wwwroot/app.trevitsoft.com/storage/app/public/', '', $transaction->factura_afip);
+        $facturaPath = str_replace('/www/wwwroot/gestionenorden.com/storage/app/public/', '', $transaction->factura_afip);
         // Generar la URL pública correcta
         $enlace = asset('storage/' . $facturaPath);
     
@@ -2229,7 +2229,7 @@ ktXM8qGO0BygJmp3clHKCJCIHU4wLq2qo7/8Y9JTMD5AKA7+ymT5
 
         
         Log::info('Llamada a API AFIP para obtener datos del emisor', [
-            'url' => 'https://app.trevitsoft.com/get-taxpayer-details',
+            'url' => 'https://gestionenorden.com/get-taxpayer-details',
             'params' => ['tax_id' => $cuitEmisor],
             'status' => $response->status(),
             'body' => $response->body(),
