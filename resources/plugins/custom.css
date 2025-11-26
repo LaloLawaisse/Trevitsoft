@@ -52,7 +52,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
 .main-sidebar {
   box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15) !important;
-  padding-top: 62px; }
+  padding-top: 16px; }
   .main-sidebar .logo {
     width: 100%;
     /*font-family: 'Open Sans',sans-serif;*/
