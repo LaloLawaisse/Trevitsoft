@@ -9,7 +9,7 @@
 
     
     <a href="{{ route('home') }}"
-       class="tw-flex tw-items-center tw-justify-center tw-w-full tw-border-r tw-h-20 tw-shrink-0 tw-border-primary-500/30"
+       class="tw-flex tw-items-center tw-justify-center tw-w-full tw-border-r tw-h-16 tw-shrink-0 tw-border-primary-500/30"
        style="background-color: #00434a;">
         <img src="{{ asset('img/logoSidebar.jpg') }}"
              onerror="this.onerror=null;this.src='{{ asset('img/logoSidebar2.jpg') }}';"
