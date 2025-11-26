@@ -643,6 +643,22 @@ background-image: linear-gradient(to right, #3c3c4e, #245b80);
 .skin-black .main-header .navbar .navbar-custom-menu .navbar-nav > li > a, .skin-black .main-header .navbar .navbar-right > li > a, .skin-black-light .main-header .navbar .navbar-custom-menu .navbar-nav > li > a, .skin-black-light .main-header .navbar .navbar-right > li > a {
   border-left: 0px; }
 
+/* Brand palette overrides */
+.main-sidebar {
+  background: #00434a !important;
+}
+.sidebar-menu > li > .treeview-menu {
+  background: #00363d !important;
+}
+.sidebar-menu > li:hover > a,
+.sidebar-menu > li.active > a,
+.sidebar-menu > li.menu-open > a,
+.sidebar-menu .treeview-menu > li.active > a,
+.sidebar-menu .treeview-menu > li > a:hover {
+  background: #21dbb1 !important;
+  color: #fff !important;
+}
+
 @media screen and (max-width: 767px) {
   .main-header .logo {
     display: none; }
