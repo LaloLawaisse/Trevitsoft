@@ -505,7 +505,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
         Route::post('/refresh-orders-list', [Restaurant\KitchenController::class, 'refreshOrdersList']);
         Route::post('/refresh-line-orders-list', [Restaurant\KitchenController::class, 'refreshLineOrdersList']);
 
-        Route::get('/orders', [Restaurant\OrderController::class, 'index']);
+        Route::get(uri: '/orders', [Restaurant\OrderController::class, 'index']);
         Route::get('/orders/mark-as-served/{id}', [Restaurant\OrderController::class, 'markAsServed']);
         Route::get('/data/get-pos-details', [Restaurant\DataController::class, 'getPosDetails']);
         Route::get('/data/check-staff-pin', [Restaurant\DataController::class, 'checkStaffPin']);
@@ -521,11 +521,11 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::put('sells/update-shipping/{id}', [SellController::class, 'updateShipping']);
     Route::get('shipments', [SellController::class, 'shipments']);
 
-    Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);
-    Route::delete('manage-modules/destroy/{module_name}', [Install\ModulesController::class, 'destroy']);
-    Route::resource('manage-modules', Install\ModulesController::class)
-        ->only(['index', 'update']);
-    Route::get('regenerate', [Install\ModulesController::class, 'regenerate']);
+    //Route::post('upload-module', [Install\ModulesController::class, 'uploadModule']);
+    //Route::delete('manage-modules/destroy/{module_name}', [Install\ModulesController::class, 'destroy']);
+    //Route::resource('manage-modules', Install\ModulesController::class)
+    //    ->only(['index', 'update']);
+    //Route::get('regenerate', [Install\ModulesController::class, 'regenerate']);
 
     Route::resource('warranties', WarrantyController::class);
 
