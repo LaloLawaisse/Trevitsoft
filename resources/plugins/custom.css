@@ -658,6 +658,9 @@ background-image: linear-gradient(to right, #3c3c4e, #245b80);
   background: #21dbb1 !important;
   color: #fff !important;
 }
+.main-sidebar {
+  padding-top: 12px !important;
+}
 
 @media screen and (max-width: 767px) {
   .main-header .logo {
