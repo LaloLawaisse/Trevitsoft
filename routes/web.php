@@ -257,7 +257,10 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::post('/products/toggle-woocommerce-sync', [ProductController::class, 'toggleWooCommerceSync']);
     Route::get('/products/materials-options', [MaterialController::class, 'materialsOptions']);
 
-    Route::resource('products', ProductController::class);
+    // Restringir {product} a dígitos para que rutas como /products/materials-options no choquen
+    Route::resource('products', ProductController::class)->where([
+        'product' => '[0-9]+',
+    ]);
 
     // Materials (Insumos)
     Route::get('/materials/list', [MaterialController::class, 'index']);
