@@ -11,6 +11,19 @@ use Yajra\DataTables\Facades\DataTables;
 
 class MaterialController extends Controller
 {
+    /**
+     * Devuelve el ID del insumo soportando columnas ID/id.
+     */
+    protected function getMaterialId(Material $material): ?int
+    {
+        $materialId = $material->getAttribute('ID');
+        if (empty($materialId)) {
+            $materialId = $material->getAttribute('id');
+        }
+
+        return $materialId ? (int) $materialId : null;
+    }
+
     public function index(Request $request)
     {
         if (! auth()->user()->can('product.view') && ! auth()->user()->can('product.create')) {
@@ -99,6 +112,14 @@ class MaterialController extends Controller
         }
 
         $material = Material::create($validated);
+        $materialId = $this->getMaterialId($material);
+        if (!$materialId) {
+            \Log::error('Material store: missing material ID after create', [
+                'business_id' => $validated['business_id'],
+                'payload_nombre' => $validated['nombre'] ?? null,
+            ]);
+            return back()->withErrors(['material' => 'No se pudo guardar el insumo. Intenta nuevamente.'])->withInput();
+        }
 
         $productIds = isset($validated['productos_linkeados']) && is_array($validated['productos_linkeados'])
             ? array_values(array_unique(array_filter(array_map('intval', $validated['productos_linkeados']))))
@@ -106,7 +127,7 @@ class MaterialController extends Controller
 
         if (!empty($productIds)) {
             // Sincroniza JSON products.materiales
-            $this->syncProductsForMaterial($material, [], $productIds, $validated['business_id']);
+            $this->syncProductsForMaterial($material, [], $productIds, $validated['business_id'], $materialId);
 
             // Sincroniza tabla pivot para costo de insumos usando cantidades
             $productQuantities = $request->input('productos_qty', []);
@@ -115,7 +136,7 @@ class MaterialController extends Controller
             // Elimina vínculos existentes para este insumo
             DB::table('material_product')
                 ->where('business_id', $businessId)
-                ->where('material_id', $material->ID)
+                ->where('material_id', $materialId)
                 ->delete();
 
             // Inserta/actualiza con la cantidad indicada por producto
@@ -132,7 +153,7 @@ class MaterialController extends Controller
                     [
                         'business_id' => $businessId,
                         'product_id'  => $productId,
-                        'material_id' => $material->ID,
+                        'material_id' => $materialId,
                     ],
                     [
                         'quantity'   => $qty,
@@ -154,13 +175,22 @@ class MaterialController extends Controller
 
         $business_id = request()->session()->get('user.business_id');
         $material = Material::where('business_id', $business_id)->findOrFail($id);
+        $materialId = $this->getMaterialId($material);
 
         // Cantidades de insumo por producto desde la tabla pivot
-        $product_quantities = DB::table('material_product')
-            ->where('business_id', $business_id)
-            ->where('material_id', $material->ID)
-            ->pluck('quantity', 'product_id')
-            ->toArray();
+        if (!$materialId) {
+            \Log::warning('Material edit: material ID missing, skipping pivot quantities', [
+                'material_param' => $id,
+                'business_id' => $business_id,
+            ]);
+            $product_quantities = [];
+        } else {
+            $product_quantities = DB::table('material_product')
+                ->where('business_id', $business_id)
+                ->where('material_id', $materialId)
+                ->pluck('quantity', 'product_id')
+                ->toArray();
+        }
 
         return view('material.edit', compact('material', 'product_quantities'));
     }
@@ -181,6 +211,14 @@ class MaterialController extends Controller
 
         $business_id = $request->session()->get('user.business_id');
         $material = Material::where('business_id', $business_id)->findOrFail($id);
+        $materialId = $this->getMaterialId($material);
+        if (!$materialId) {
+            \Log::error('Material update: missing material ID', [
+                'material_param' => $id,
+                'business_id' => $business_id,
+            ]);
+            return back()->withErrors(['material' => 'No se pudo actualizar el insumo porque falta su identificador.'])->withInput();
+        }
 
         $oldProductIds = is_array($material->productos_linkeados) ? $material->productos_linkeados : [];
         $oldProductIds = array_values(array_unique(array_filter(array_map('intval', $oldProductIds))));
@@ -195,14 +233,14 @@ class MaterialController extends Controller
         $newProductIds = array_values(array_unique(array_filter(array_map('intval', $newProductIds))));
 
           // Actualiza JSON products.materiales
-          $this->syncProductsForMaterial($material, $oldProductIds, $newProductIds, $business_id);
+          $this->syncProductsForMaterial($material, $oldProductIds, $newProductIds, $business_id, $materialId);
 
           // Sincroniza pivot para costo de insumos usando cantidades
           $productQuantities = $request->input('productos_qty', []);
           $businessId = $business_id;
           DB::table('material_product')
               ->where('business_id', $businessId)
-              ->where('material_id', $material->ID)
+              ->where('material_id', $materialId)
               ->when(!empty($newProductIds), function ($q) use ($newProductIds) {
                   $q->whereNotIn('product_id', $newProductIds);
               })
@@ -221,7 +259,7 @@ class MaterialController extends Controller
                   [
                       'business_id' => $businessId,
                       'product_id'  => $productId,
-                      'material_id' => $material->ID,
+                      'material_id' => $materialId,
                   ],
                   [
                       'quantity'   => $qty,
@@ -261,10 +299,18 @@ class MaterialController extends Controller
             ]);
             return ['success' => false, 'msg' => 'Material no encontrado'];
         }
+        $materialId = $this->getMaterialId($material);
+        if (!$materialId) {
+            \Log::error('Material destroy: missing material ID', [
+                'material_id_param' => $id,
+                'business_id' => $business_id,
+            ]);
+            return ['success' => false, 'msg' => 'No se pudo eliminar el insumo porque falta su identificador.'];
+        }
 
         \Log::info('Material destroy: material loaded', [
             'material_id_param' => $id,
-            'material_id_model' => $material->ID ?? null,
+            'material_id_model' => $materialId,
             'material_nombre' => $material->nombre,
         ]);
 
@@ -273,7 +319,7 @@ class MaterialController extends Controller
 
         \Log::info('Material destroy: old linked products', [
             'material_id_param' => $id,
-            'material_id_model' => $material->ID ?? null,
+            'material_id_model' => $materialId,
             'old_product_ids' => $oldProductIds,
         ]);
 
@@ -281,12 +327,12 @@ class MaterialController extends Controller
         if (!empty($oldProductIds)) {
             \Log::info('Material destroy: calling syncProductsForMaterial to detach from products', [
                 'material_id_param' => $id,
-                'material_id_model' => $material->ID ?? null,
+                'material_id_model' => $materialId,
             ]);
-            $this->syncProductsForMaterial($material, $oldProductIds, [], $business_id);
+            $this->syncProductsForMaterial($material, $oldProductIds, [], $business_id, $materialId);
         } else {
             \Log::info('Material destroy: no linked products to detach', [
-                'material_id' => $material->ID,
+                'material_id' => $materialId,
             ]);
         }
 
@@ -295,13 +341,13 @@ class MaterialController extends Controller
             if (\Schema::hasTable('material_product')) {
                 \Log::info('Material destroy: deleting pivot rows from material_product', [
                     'material_id_param' => $id,
-                    'material_id_model' => $material->ID ?? null,
+                    'material_id_model' => $materialId,
                     'business_id' => $business_id,
                 ]);
 
                 DB::table('material_product')
                     ->where('business_id', $business_id)
-                    ->where('material_id', $id)
+                    ->where('material_id', $materialId)
                     ->delete();
             } else {
                 \Log::info('Material destroy: material_product table does not exist, skipping pivot delete');
@@ -309,19 +355,19 @@ class MaterialController extends Controller
         } catch (\Throwable $e) {
             \Log::warning('Material destroy: error deleting material_product rows', [
                 'material_id_param' => $id,
-                'material_id_model' => $material->ID ?? null,
+                'material_id_model' => $materialId,
                 'error' => $e->getMessage(),
             ]);
         }
 
         \Log::info('Material destroy: deleting material record', [
             'material_id_param' => $id,
-            'material_id_model' => $material->ID ?? null,
+            'material_id_model' => $materialId,
         ]);
 
         // Eliminamos usando query directa sobre la PK real
         Material::where('business_id', $business_id)
-            ->where('ID', $id)
+            ->where('ID', $materialId)
             ->delete();
 
         \Log::info('Material destroy: completed successfully', [
@@ -409,12 +455,23 @@ class MaterialController extends Controller
      * @param  array  $oldProductIds
      * @param  array  $newProductIds
      * @param  int  $business_id
+     * @param  int|null $materialId
      * @return void
      */
-    protected function syncProductsForMaterial(Material $material, array $oldProductIds, array $newProductIds, $business_id)
+    protected function syncProductsForMaterial(Material $material, array $oldProductIds, array $newProductIds, $business_id, ?int $materialId = null)
     {
+        $materialId = $materialId ?: $this->getMaterialId($material);
         $oldProductIds = array_values(array_unique(array_filter(array_map('intval', $oldProductIds))));
         $newProductIds = array_values(array_unique(array_filter(array_map('intval', $newProductIds))));
+
+        if (!$materialId) {
+            \Log::warning('syncProductsForMaterial: missing material ID, aborting sync', [
+                'business_id' => $business_id,
+                'old_products' => $oldProductIds,
+                'new_products' => $newProductIds,
+            ]);
+            return;
+        }
 
         $toUpdate = array_values(array_unique(array_merge($oldProductIds, $newProductIds)));
         if (empty($toUpdate)) {
@@ -430,11 +487,11 @@ class MaterialController extends Controller
             $materialsForProduct = array_values(array_unique(array_filter(array_map('intval', $materialsForProduct))));
 
             if (in_array($product->id, $newProductIds, true)) {
-                if (!in_array($material->ID, $materialsForProduct, true)) {
-                    $materialsForProduct[] = $material->ID;
+                if (!in_array($materialId, $materialsForProduct, true)) {
+                    $materialsForProduct[] = $materialId;
                 }
             } else {
-                $materialsForProduct = array_values(array_diff($materialsForProduct, [$material->ID]));
+                $materialsForProduct = array_values(array_diff($materialsForProduct, [$materialId]));
             }
 
             $product->materiales = $materialsForProduct;
@@ -480,4 +537,3 @@ class MaterialController extends Controller
         }
     }
 }
-
