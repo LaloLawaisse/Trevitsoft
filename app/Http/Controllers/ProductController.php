@@ -583,6 +583,10 @@ class ProductController extends Controller
             }
 
             $product_details = $request->only($form_fields);
+            // Normalizar impuesto: permitir nulo cuando el formulario envía 0 o vacío
+            if (empty($product_details['tax'])) {
+                $product_details['tax'] = null;
+            }
             $product_details['business_id'] = $business_id;
             $product_details['created_by'] = $request->session()->get('user.id');
 
@@ -853,6 +857,9 @@ class ProductController extends Controller
         try {
             $business_id = $request->session()->get('user.business_id');
             $product_details = $request->only(['name', 'brand_id', 'unit_id', 'category_id', 'tax', 'barcode_type', 'sku', 'alert_quantity', 'tax_type', 'weight', 'product_description', 'sub_unit_ids', 'preparation_time_in_minutes', 'product_custom_field1', 'product_custom_field2', 'product_custom_field3', 'product_custom_field4', 'product_custom_field5', 'product_custom_field6', 'product_custom_field7', 'product_custom_field8', 'product_custom_field9', 'product_custom_field10', 'product_custom_field11', 'product_custom_field12', 'product_custom_field13', 'product_custom_field14', 'product_custom_field15', 'product_custom_field16', 'product_custom_field17', 'product_custom_field18', 'product_custom_field19', 'product_custom_field20',]);
+            if (empty($product_details['tax'])) {
+                $product_details['tax'] = null;
+            }
 
             DB::beginTransaction();
 
@@ -1661,6 +1668,9 @@ class ProductController extends Controller
                 }
             }
             $product_details = $request->only($form_fields);
+            if (empty($product_details['tax'])) {
+                $product_details['tax'] = null;
+            }
 
             $product_details['type'] = empty($product_details['type']) ? 'single' : $product_details['type'];
             $product_details['business_id'] = $business_id;
@@ -2573,8 +2583,5 @@ class ProductController extends Controller
         return Excel::download(new ProductsExport, $filename);
     }
 }
-
-
-
 
 
